@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC単語帳 (赤シート形式)</title>
+    <!-- Tailwind CSSを読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Interフォントの読み込み */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+        
+        body {
+            /* 日本語はNoto Sans JP、英語はInterを指定 */
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f4f7f6; /* 少し柔らかい背景色 */
+        }
+
+        /* 赤シートのスタイル */
+        .answer {
+            background-color: #ef4444; /* Tailwindのred-500 */
+            color: #ef4444;
+            border-radius: 3px;
+            padding: 0 2px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        /* JSで .visible クラスが追加されたときのスタイル */
+        .answer.visible {
+            background-color: transparent;
+            color: #1d4ed8; /* Tailwindのblue-700 */
+            font-weight: 700; /* 太字 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto max-w-3xl p-4 sm:p-6">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-700">TOEIC単語帳 100</h1>
+            <p class="text-lg text-gray-600 mt-2">カードをクリックして答えを見よう！</p>
+        </header>
+
+        <!-- 単語カードが挿入されるコンテナ -->
+        <main id="card-container" class="space-y-4">
+            <!-- JSによってここにカードが生成されます -->
+        </main>
+    </div>
+
+    <script>
+        // 100個の単語データ
+        // ユーザーの入力を元に、スペルミスを修正しています。
+        const words = [
+            { num: 1, en: "Let's try anyway.", ja_pre: "とにかく", ja_ans: "やってみよう。" },
+            { num: 2, en: "Following the speech, we had dinner.", ja_pre: "スピーチに", ja_ans: "続いて", ja_post: "、夕食をとった。" },
+            { num: 3, en: "Please refer to the map.", ja_pre: "地図を", ja_ans: "参照して", ja_post: "ください。" },
+            { num: 4, en: "Tickets are available online.", ja_pre: "チケットはオンラインで", ja_ans: "入手可能", ja_post: "です。" },
+            { num: 5, en: "the sales department.", ja_pre: "営業", ja_ans: "部" },
+            { num: 6, en: "a large conference room.", ja_pre: "大きな", ja_ans: "会議", ja_post: "室" },
+            { num: 7, en: "according to the e-mail.", ja_pre: "メール", ja_ans: "によると" },
+            { num: 8, en: "Who most likely is the woman?", ja_pre: "女性は", ja_ans: "おそらく", ja_post: "誰ですか。" },
+            { num: 9, en: "What does the man offer to do?", ja_pre: "男性は何をすることを", ja_ans: "申し出て", ja_post: "いますか。" },
+            { num: 10, en: "new office equipment.", ja_pre: "新しいオフィス", ja_ans: "機器" },
+            { num: 11, en: "Please provide me with your e-mail address.", ja_pre: "あなたのメールアドレスを", ja_ans: "提供して", ja_post: "ください。" },
+            { num: 12, en: "local businesses.", ja_pre: "地元の", ja_ans: "会社" },
+            { num: 13, en: "purchase tickets.", ja_pre: "チケットを", ja_ans: "購入する", ja_post: "。" },
+            { num: 14, en: "a job opening.", ja_pre: "仕事の", ja_ans: "空き", ja_post: "。" },
+            { num: 15, en: "construction project.", ja_pre: "建設", ja_ans: "プロジェクト。" },
+            { num: 16, en: "while touring the factory.", ja_pre: "工場を", ja_ans: "見学", ja_post: "している間。" },
+            { num: 17, en: "market research.", ja_pre: "市場", ja_ans: "調査" },
+            { num: 18, en: "attend a meeting.", ja_pre: "会議に", ja_ans: "出席", ja_post: "する。" },
+            { num: 19, en: "change a delivery date.", ja_pre: "配達", ja_ans: "日を変更する。" },
+            { num: 20, en: "I recently bought a printer.", ja_pre: "私は", ja_ans: "最近", ja_post: "プリンターを買った。" },
+            { num: 21, en: "What is indicated about Mr. Kato?", ja_pre: "加藤さんについて何が", ja_ans: "示されて", ja_post: "いますか。" },
+            { num: 22, en: "An employee of a hotel", ja_pre: "ホテルの", ja_ans: "従業員" },
+            { num: 23, en: "request additional staff.", ja_pre: "追加の", ja_ans: "スタッフを要請する。" },
+            { num: 24, en: "a customer survey.", ja_pre: "顧客", ja_ans: "アンケート調査" },
+            { num: 25, en: "review a report.", ja_pre: "報告書に", ja_ans: "目を通す" },
+            { num: 26, en: "the production area.", ja_pre: "生産", ja_ans: "エリア" },
+            { num: 27, en: "conveniently located near a subway station.", ja_pre: "地下鉄の駅近くの便利な", ja_ans: "場所にある" },
+            { num: 28, en: "details of a plan.", ja_pre: "計画の", ja_ans: "詳細" },
+            { num: 29, en: "announce the winners.", ja_pre: "入賞者を", ja_ans: "発表する" },
+            { num: 30, en: "a computer repair shop.", ja_pre: "コンピュータの", ja_ans: "修理", ja_post: "店" },
+            { num: 31, en: "an increase in sales.", ja_pre: "売上の", ja_ans: "増加" },
+            { num: 32, en: "What is NOT included in the form?", ja_pre: "用紙に", ja_ans: "含まれて", ja_post: "いないのは何ですか。" },
+            { num: 33, en: "The item is currently out of stock.", ja_pre: "その品は", ja_ans: "現在", ja_post: "在庫切れです。" },
+            { num: 34, en: "an advertising campaign.", ja_pre: "広告", ja_ans: "キャンペーン" },
+            { num: 35, en: "We charge $50 for the service.", ja_pre: "そのサービスには50ドルを", ja_ans: "請求します", ja_post: "。" },
+            { num: 36, en: "Mr. Kato is expected to arrive tomorrow.", ja_pre: "加藤さんは明日到着する", ja_ans: "予定だ", ja_post: "。" },
+            { num: 37, en: "a family-owned firm.", ja_pre: "家族経営の", ja_ans: "会社" },
+            { num: 38, en: "visit a client.", ja_pre: "顧客", ja_ans: "を訪問する" },
+            { num: 39, en: "financial support from the goverment.", ja_pre: "政府からの", ja_ans: "お金の", ja_post: "支援" },
+            { num: 40, en: "an annual report.", ja_pre: "年次", ja_ans: "報告書" },
+            { num: 41, en: "make an online payment.", ja_pre: "オンラインの", ja_ans: "支払い", ja_post: "をする" },
+            { num: 42, en: "this year's budget.", ja_pre: "今年度の", ja_ans: "予算" },
+            { num: 43, en: "fill out an application.", ja_pre: "応募書類", ja_ans: "に記入する" },
+            { num: 44, en: "before signing a contract.", ja_pre: "契約", ja_ans: "に署名する前に" },
+            { num: 45, en: "a management seminar.", ja_pre: "経営", ja_ans: "セミナー" },
+            { num: 46, en: "an employee's performance.", ja_pre: "従業員の", ja_ans: "成績" },
+            { num: 47, en: "We are pleased with the final result.", ja_pre: "最終結果に", ja_ans: "満足", ja_post: "している。" },
+            { num: 48, en: "confirm a payment.", ja_pre: "支払いを", ja_ans: "確認", ja_post: "する" },
+            { num: 49, en: "awards ceremony.", ja_pre: "授賞", ja_ans: "式" },
+            { num: 50, en: "a clothing store.", ja_pre: "衣料品", ja_ans: "店" },
+            { num: 51, en: "products on display.", ja_pre: "展示", ja_ans: "されている製品" },
+            { num: 52, en: "a successful candidate.", ja_pre: "合格した", ja_ans: "候補者" },
+            { num: 53, en: "What is stated about the hotel?", ja_pre: "ホテルについて何が", ja_ans: "述べられて", ja_post: "いますか。" },
+            { num: 54, en: "a museum exhibit.", ja_pre: "博物館の", ja_ans: "展示物" },
+            { num: 55, en: "a Q&A session.", ja_pre: "質疑応答の", ja_ans: "時間" },
+            { num: 56, en: "Please note that prices may change.", ja_pre: "値段は変更になる場合があるので、", ja_ans: "注意して", ja_post: "ください。" },
+            { num: 57, en: "process an order.", ja_pre: "注文を", ja_ans: "処理する" },
+            { num: 58, en: "Please read all the instructions.", ja_pre: "説明書", ja_ans: "をすべてお読みください。" },
+            { num: 59, en: "sign up for membership.", ja_pre: "会員", ja_ans: "登録する。" },
+            { num: 60, en: "a travel agency.", ja_pre: "旅行", ja_ans: "代理店" },
+            { num: 61, en: "a Seattle-based company", ja_pre: "シアトルに", ja_ans: "拠点を置く", ja_post: "会社" },
+            { num: 62, en: "a research facility.", ja_pre: "研究", ja_ans: "施設" },
+            { num: 63, en: "advance notice.", ja_pre: "事前の", ja_ans: "告知" },
+            { num: 64, en: "join a committee.", ja_pre: "委員会", ja_ans: "に入る。" },
+            { num: 65, en: "The event was successful.", ja_pre: "そのイベントは", ja_ans: "成功だった", ja_post: "。" },
+            { num: 66, en: "excellent service.", ja_pre: "素晴らしい", ja_ans: "サービス" },
+            { num: 67, en: "the fashion industry.", ja_pre: "ファッション", ja_ans: "業界" },
+            { num: 68, en: "pay a late fee.", ja_pre: "延滞", ja_ans: "料金", ja_post: "を払う" },
+            { num: 69, en: "accept an offer.", ja_pre: "オファーを", ja_ans: "受け入れる", ja_post: "。" },
+            { num: 70, en: "prepare for an upcoming event.", ja_pre: "今度の", ja_ans: "イベントの準備をする。" },
+            { num: 71, en: "Haruki Murakami's latest novel.", ja_pre: "村上春樹の", ja_ans: "最新の", ja_post: "小説。" },
+            { num: 72, en: "submit a report", ja_pre: "レポートを", ja_ans: "提出する", ja_post: "。" },
+            { num: 73, en: "use public transportation", ja_pre: "公共の", ja_ans: "交通機関", ja_post: "を利用する" },
+            { num: 74, en: "send a resume", ja_pre: "履歴書", ja_ans: "を送る" },
+            { num: 75, en: "a company executive", ja_pre: "会社の", ja_ans: "重役" },
+            { num: 76, en: "introduce a new line of products", ja_pre: "新たな商品ラインを", ja_ans: "導入する", ja_post: "。" },
+            { num: 77, en: "have no previous experience", ja_pre: "以前の", ja_ans: "経験がない" },
+            { num: 78, en: "review a proposal", ja_pre: "提案", ja_ans: "に目を通す" },
+            { num: 79, en: "office supplies", ja_pre: "オフィス", ja_ans: "用品" },
+            { num: 80, en: "My resume is enclosed.", ja_pre: "履歴書を", ja_ans: "同封いたします", ja_post: "。" },
+            { num: 81, en: "returns policy", ja_pre: "返品", ja_ans: "規定" },
+            { num: 82, en: "register for employee training", ja_pre: "社員研修に", ja_ans: "登録する" },
+            { num: 83, en: "arrange a meeting", ja_pre: "会議の", ja_ans: "手配をする" },
+            { num: 84, en: "receive a bill", ja_pre: "請求書", ja_ans: "を受け取る" },
+            { num: 85, en: "hire an assistant", ja_pre: "アシスタントを", ja_ans: "雇う" },
+            { num: 86, en: "approve a plan", ja_pre: "計画を", ja_ans: "承認する" },
+            { num: 87, en: "conduct a survey", ja_pre: "アンケート調査を", ja_ans: "行う" },
+            { num: 88, en: "an opportunity to work with you", ja_pre: "あなたとお仕事をする", ja_ans: "機会" },
+            { num: 89, en: "the deadline for the project", ja_pre: "プロジェクトの", ja_ans: "締め切り" },
+            { num: 90, en: "a corporate trainer", ja_pre: "企業の", ja_ans: "トレーナー" },
+            { num: 91, en: "a three-year warranty", ja_pre: "3年", ja_ans: "保証" },
+            { num: 92, en: "necessary forms", ja_pre: "必要な", ja_ans: "用紙" },
+            { num: 93, en: "reserve a room at a hotel", ja_pre: "ホテルの部屋を", ja_ans: "予約する" },
+            { num: 94, en: "local residents", ja_pre: "地元の", ja_ans: "住民" },
+            { num: 95, en: "create a new logo", ja_pre: "新しいロゴを", ja_ans: "作り出す" },
+            { num: 96, en: "We are happy to inform you that", ja_pre: "～を", ja_ans: "知らせる", ja_post: "ことができてうれしい。" },
+            { num: 97, en: "allow customers to pay online", ja_pre: "顧客がオンラインで支払うことを", ja_ans: "可能にする" },
+            { num: 98, en: "What problem does the man mention?", ja_pre: "男性はどんな問題について", ja_ans: "述べて", ja_post: "いますか。" },
+            { num: 99, en: "I really appreciate your help.", ja_pre: "助けていただいて本当に", ja_ans: "感謝しています", ja_post: "。" },
+            { num: 100, en: "replacement parts", ja_pre: "交換", ja_ans: "部品" },
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('card-container');
+
+            // データからカードを生成
+            words.forEach(word => {
+                // カード要素を作成
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-lg shadow-md p-4 transition duration-200 hover:shadow-lg cursor-pointer';
+
+                // カードの内容をHTMLで作成
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="text-base font-bold text-blue-600 w-8 text-right">${word.num}.</span>
+                        <div class="flex-1">
+                            <p class="text-lg font-medium text-gray-900">${word.en}</p>
+                            <p class="text-md text-gray-600 mt-2">
+                                ${word.ja_pre || ''}
+                                <span class="answer">${word.ja_ans}</span>
+                                ${word.ja_post || ''}
+                            </p>
+                        </div>
+                    </div>
+                `;
+
+                // カードにクリックイベントを追加
+                card.addEventListener('click', () => {
+                    // カード内の .answer 要素を探す
+                    const answerSpan = card.querySelector('.answer');
+                    // .visible クラスをトグル（付け外し）する
+                    answerSpan.classList.toggle('visible');
+                });
+
+                // コンテナにカードを追加
+                container.appendChild(card);
+            });
+        });
+    </script>
+
+</body>
+</html>
